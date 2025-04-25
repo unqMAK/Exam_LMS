@@ -11,8 +11,14 @@ export const getBooks = async (req: Request, res: Response) => {
 };
 
 export const addBook = async (req: Request, res: Response) => {
+  const { title, author, publishedYear } = req.body;
+
+  if (!title || !author || !publishedYear) {
+    return res.status(400).json({ error: 'All fields (title, author, publishedYear) are required' });
+  }
+
   try {
-    const book = await Book.create(req.body);
+    const book = await Book.create({ title, author, publishedYear });
     res.status(201).json(book);
   } catch (error) {
     res.status(400).json({ error: 'Error creating book' });

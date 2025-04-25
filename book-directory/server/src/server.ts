@@ -9,7 +9,7 @@ import bookRoutes from './routes/bookRoutes';
 dotenv.config({ path: resolve(__dirname, '../.env') });
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 if (!process.env.MONGODB_URI) {
   console.error('No MongoDB URI found in environment variables');
@@ -17,8 +17,17 @@ if (!process.env.MONGODB_URI) {
 }
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:3000', 'https://exam-lms-client.onrender.com'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}));
 app.use(express.json());
+
+// Basic route for testing
+app.get('/', (req, res) => {
+  res.json({ message: 'Book Directory API is running' });
+});
 
 // Routes
 app.use('/api/books', bookRoutes);

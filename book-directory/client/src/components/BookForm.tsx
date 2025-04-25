@@ -17,7 +17,7 @@ const BookForm: React.FC<BookFormProps> = ({ onBookAdded }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:5000/api/books', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/books`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -37,9 +37,14 @@ const BookForm: React.FC<BookFormProps> = ({ onBookAdded }) => {
           description: ''
         });
         onBookAdded();
+      } else {
+        const error = await response.json();
+        console.error('Error adding book:', error);
+        alert('Failed to add book. Please try again.');
       }
     } catch (error) {
       console.error('Error adding book:', error);
+      alert('Failed to add book. Please check your connection and try again.');
     }
   };
 
