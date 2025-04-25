@@ -10,8 +10,14 @@ const getBooks = async (req, res) => {
 };
 
 const addBook = async (req, res) => {
+  const { title, author, publishedYear } = req.body;
+
+  if (!title || !author || !publishedYear) {
+    return res.status(400).json({ error: 'All fields (title, author, publishedYear) are required' });
+  }
+
   try {
-    const book = await Book.create(req.body);
+    const book = await Book.create({ title, author, publishedYear });
     res.status(201).json(book);
   } catch (error) {
     res.status(400).json({ error: 'Error creating book' });
@@ -20,13 +26,11 @@ const addBook = async (req, res) => {
 
 const updateBook = async (req, res) => {
   try {
-    const { id } = req.params;
     const book = await Book.findByIdAndUpdate(
-      id,
+      req.params.id,
       req.body,
-      { new: true, runValidators: true }
+      { new: true }
     );
-    
     if (!book) {
       return res.status(404).json({ error: 'Book not found' });
     }

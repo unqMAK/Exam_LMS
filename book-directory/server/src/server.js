@@ -1,29 +1,59 @@
+const dotenv = require('dotenv');
+const { resolve } = require('path');
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bookRoutes = require('./routes/bookRoutes');
 
+// Load environment variables with explicit path
+dotenv.config({ path: resolve(__dirname, '../.env') });
+
 const app = express();
-const PORT = 5001;  // Changed port to avoid conflicts
+const PORT = process.env.PORT || 5001;
+
+if (!process.env.MONGODB_URI) {
+  console.error('No MongoDB URI found in environment variables');
+  process.exit(1);
+}
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'https://exam-lms-client.onrender.com',
+    'https://book-directory-client.onrender.com'
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}));
 app.use(express.json());
+
+// Basic route for testing
+app.get('/', (req, res) => {
+  res.json({ message: 'Book Directory API is running' });
+});
 
 // Routes
 app.use('/api/books', bookRoutes);
 
-// MongoDB Atlas connection string with encoded special characters
-const password = encodeURIComponent('Mak@1944');
-const MONGODB_URI = `mongodb+srv://MAK:${password}@nodeexpense.n7iw2ye.mongodb.net/bookDirectory?retryWrites=true&w=majority&appName=NodeExpense`;
+// MongoDB connection options
+const options = {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+};
 
-mongoose.connect(MONGODB_URI)
+// Connect to MongoDB
+mongoose.connect(process.env.MONGODB_URI, options)
   .then(() => {
-    console.log('Connected to MongoDB Atlas');
-    app.listen(PORT, () => {
+    console.log('Successfully connected to MongoDB Atlas');
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`Server is running on port ${PORT}`);
     });
   })
   .catch((error) => {
-    console.error('MongoDB connection error:', error);
+    console.error('Error connecting to MongoDB Atlas:', error.message);
+    if (error.code) {
+      console.error('Error code:', error.code);
+    }
+    process.exit(1);
   });

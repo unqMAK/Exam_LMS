@@ -13,19 +13,15 @@ function App() {
   const [author, setAuthor] = useState('');
   const [publishedYear, setPublishedYear] = useState('');
   const [editingBook, setEditingBook] = useState<Book | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchBooks();
-  }, []);
+  const apiUrl = process.env.REACT_APP_API_URL;
 
   const fetchBooks = async () => {
-    setIsLoading(true);
+    setLoading(true);
     setError(null);
     try {
-      const apiUrl = process.env.REACT_APP_API_URL;
-      console.log('Fetching books from:', `${apiUrl}/books`);
       const response = await fetch(`${apiUrl}/books`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -33,29 +29,30 @@ function App() {
       const data = await response.json();
       setBooks(data);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An error occurred while fetching books';
-      console.error('Error:', errorMessage);
-      setError(errorMessage);
+      console.error('Error fetching books:', error);
+      setError('Failed to fetch books. Please try again later.');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setLoading(true);
     setError(null);
     try {
-      const apiUrl = process.env.REACT_APP_API_URL;
+      const bookData = {
+        title,
+        author,
+        publishedYear: Number(publishedYear),
+      };
       if (editingBook) {
         const response = await fetch(`${apiUrl}/books/${editingBook._id}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            title,
-            author,
-            publishedYear: Number(publishedYear)
-          }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(bookData),
         });
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -64,12 +61,10 @@ function App() {
       } else {
         const response = await fetch(`${apiUrl}/books`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            title,
-            author,
-            publishedYear: Number(publishedYear)
-          }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(bookData),
         });
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -78,13 +73,31 @@ function App() {
       setTitle('');
       setAuthor('');
       setPublishedYear('');
-      fetchBooks();
+      await fetchBooks();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An error occurred while saving the book';
-      console.error('Error:', errorMessage);
-      setError(errorMessage);
+      console.error('Error adding/updating book:', error);
+      setError('Failed to add/update book. Please try again later.');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`${apiUrl}/books/${id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      await fetchBooks();
+    } catch (error) {
+      console.error('Error deleting book:', error);
+      setError('Failed to delete book. Please try again later.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -102,26 +115,9 @@ function App() {
     setPublishedYear('');
   };
 
-  const deleteBook = async (id: string) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const apiUrl = process.env.REACT_APP_API_URL;
-      const response = await fetch(`${apiUrl}/books/${id}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      fetchBooks();
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An error occurred while deleting the book';
-      console.error('Error:', errorMessage);
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  useEffect(() => {
+    fetchBooks();
+  }, []);
 
   return (
     <div style={{ padding: '20px' }}>
@@ -166,12 +162,12 @@ function App() {
           style={{ 
             padding: '5px 10px', 
             marginRight: '5px',
-            opacity: isLoading ? 0.7 : 1,
-            cursor: isLoading ? 'not-allowed' : 'pointer'
+            opacity: loading ? 0.7 : 1,
+            cursor: loading ? 'not-allowed' : 'pointer'
           }}
-          disabled={isLoading}
+          disabled={loading}
         >
-          {isLoading ? 'Loading...' : (editingBook ? 'Update Book' : 'Add Book')}
+          {loading ? 'Loading...' : (editingBook ? 'Update Book' : 'Add Book')}
         </button>
         {editingBook && (
           <button type="button" onClick={cancelEdit} style={{ padding: '5px 10px' }}>
@@ -180,7 +176,7 @@ function App() {
         )}
       </form>
 
-      {isLoading && !books.length ? (
+      {loading && !books.length ? (
         <div>Loading books...</div>
       ) : (
         <div>
@@ -212,7 +208,7 @@ function App() {
                   Edit
                 </button>
                 <button 
-                  onClick={() => deleteBook(book._id!)}
+                  onClick={() => handleDelete(book._id!)}
                   style={{ 
                     padding: '5px 10px', 
                     backgroundColor: '#ff4444', 

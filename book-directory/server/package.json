@@ -2,11 +2,10 @@
   "name": "book-directory-server",
   "version": "1.0.0",
   "description": "Book Directory Server",
-  "main": "dist/server.js",
+  "main": "src/server.js",
   "scripts": {
-    "start": "node dist/server.js",
-    "build": "tsc",
-    "dev": "nodemon src/server.ts"
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -15,11 +14,6 @@
     "mongoose": "^7.8.6"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.17",
-    "@types/express": "^4.17.21",
-    "@types/node": "^18.19.86",
-    "nodemon": "^2.0.22",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
+    "nodemon": "^2.0.22"
   }
 }
