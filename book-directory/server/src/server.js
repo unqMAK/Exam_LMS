@@ -9,7 +9,7 @@ const bookRoutes = require('./routes/bookRoutes');
 dotenv.config({ path: resolve(__dirname, '../.env') });
 
 const app = express();
-const PORT = 5002; // Hardcoded port to avoid conflicts
+const PORT = process.env.PORT || 5000; // Changed to 5000 to match Render's default port
 
 if (!process.env.MONGODB_URI) {
   console.error('No MongoDB URI found in environment variables');
